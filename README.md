@@ -90,6 +90,16 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
   npm run dev
   ```
   Runs both frontend (Next.js) and backend (tRPC API routes).
+
+- **Build for production**  
+  ```bash
+  npm run build
+  ```
+
+- **Start production server**  
+  ```bash
+  npm start
+  ```
   
 - **Database push**  
   ```bash
