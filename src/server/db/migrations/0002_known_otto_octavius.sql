@@ -1,0 +1,2 @@
+ALTER TABLE "campaigns" ADD CONSTRAINT "campaigns_user_id_profiles_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("user_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "influencers" ADD CONSTRAINT "influencers_owner_user_id_profiles_user_id_fk" FOREIGN KEY ("owner_user_id") REFERENCES "public"."profiles"("user_id") ON DELETE cascade ON UPDATE no action;

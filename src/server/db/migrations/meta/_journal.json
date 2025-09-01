@@ -8,6 +8,41 @@
       "when": 1756617410011,
       "tag": "0000_flat_nicolaos",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1756661095829,
+      "tag": "0001_mute_hannibal_king",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756661337648,
+      "tag": "0002_known_otto_octavius",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1756673048592,
+      "tag": "0003_yellow_william_stryker",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1756705399981,
+      "tag": "0004_flawless_proteus",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1756705916001,
+      "tag": "0005_quick_vector",
+      "breakpoints": true
     }
   ]
 }
