@@ -137,7 +137,7 @@ export default function CampaignsPage() {
           </div>
           <button
             onClick={create}
-            className="w-full rounded-md bg-black py-2 text-white md:w-auto disabled:opacity-50"
+            className="w-full rounded-md bg-black py-2 text-white md: disabled:opacity-50"
             disabled={createMutation.isPending}
           >
             {createMutation.isPending ? "Creating…" : "Create"}
