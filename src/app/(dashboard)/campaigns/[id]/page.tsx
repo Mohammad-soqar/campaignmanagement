@@ -32,7 +32,6 @@ export default function CampaignDetailPage() {
     endDate: "",
   });
 
-  // hydrate form when campaign loads
   useEffect(() => {
     const c = campaign.data;
     if (!c) return;
@@ -43,12 +42,11 @@ export default function CampaignDetailPage() {
       startDate: c.startDate ?? "",
       endDate: c.endDate ?? "",
     });
-  }, [campaign.data?.id]); // re-init if you navigate to another id
+  }, [campaign.data]);
 
   const canSave = useMemo(() => {
     if (!form.title.trim()) return false;
     if (!form.startDate || !form.endDate) return false;
-    // (Optional) simple date check
     if (form.startDate > form.endDate) return false;
     return true;
   }, [form]);

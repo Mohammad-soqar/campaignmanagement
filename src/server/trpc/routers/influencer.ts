@@ -28,13 +28,15 @@ export const influencerRouter = router({
           followerCount: input.followerCount ?? 0,
           engagementRate: input.engagementRate ?? null,
           avatarUrl: input.avatarUrl ?? null,
-          ...({ contactEmail: (input as any).contactEmail ?? null } as any),
+          contactEmail:
+            "contactEmail" in input
+              ? (input as { contactEmail?: string | null }).contactEmail ?? null
+              : null,
         })
         .returning();
 
       return row;
     }),
-
   listMine: protectedProcedure
     .use(requireManager)
     .query(async ({ ctx }) => {
@@ -80,10 +82,11 @@ export const influencerRouter = router({
           followerCount: rest.followerCount ?? 0,
           engagementRate: rest.engagementRate ?? null,
           avatarUrl: rest.avatarUrl ?? null,
-          ...({ contactEmail: (rest as any).contactEmail ?? null } as any),
+          contactEmail: "contactEmail" in rest ? (rest as { contactEmail?: string | null }).contactEmail ?? null : null,
         })
         .where(and(eq(influencers.id, id), eq(influencers.ownerUserId, ctx.userId!)))
         .returning();
+
 
       return row ?? null;
     }),

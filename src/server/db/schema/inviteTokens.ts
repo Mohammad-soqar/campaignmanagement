@@ -1,6 +1,5 @@
 // src/server/db/schema/inviteTokens.ts
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
-import { campaigns } from './campaigns';
 import { influencers } from './influencers';
 
 export const influencerInvites = pgTable('influencer_invites', {

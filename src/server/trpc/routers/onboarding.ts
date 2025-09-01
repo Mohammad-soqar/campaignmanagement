@@ -79,16 +79,16 @@ export const onboardingRouter = router({
       const baseProfile = {
         userId,
         role: 'influencer' as const,
-        status: 'approved' as const, // <- immediate access
+        status: 'approved' as const,
         fullName: input.fullName ?? roster.handle ?? null,
-        // Copy selected public fields from roster to profile (optional; profile can be minimal)
         platform: roster.platform,
         handle: roster.handle,
         url: roster.url,
         followerCount: roster.followerCount,
         engagementRate: roster.engagementRate,
-        avatarUrl: (roster as any).avatarUrl ?? null,
+        avatarUrl: (roster as Record<string, unknown>)["avatarUrl"] as string | null ?? null,
       };
+
 
       const existing = await ctx.db
         .select()
@@ -111,7 +111,10 @@ export const onboardingRouter = router({
         .where(eq(influencers.id, roster.id));
 
       // 6) consume the invite
-      await ctx.db.delete(influencerInvites).where(eq(influencerInvites.id, invite.id as any));
+      if (typeof invite.id === 'undefined') {
+        throw new Error('Invite ID is missing');
+      }
+      await ctx.db.delete(influencerInvites).where(eq(influencerInvites.id, invite.id));
 
       return { ok: true };
     }),

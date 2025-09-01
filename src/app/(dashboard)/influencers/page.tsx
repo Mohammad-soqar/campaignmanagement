@@ -206,11 +206,17 @@ export default function InfluencersPage() {
                   <div className="font-medium truncate">{i.handle}</div>
                   <div className="text-sm text-zinc-600">
                     {i.platform} • {i.followerCount} followers • ER{" "}
-                    {fmtPct(i.engagementRate as any)}
+                    {typeof i.engagementRate === "number"
+                      ? fmtPct(i.engagementRate)
+                      : "—"}
                   </div>
                   <div className="text-xs text-zinc-500 break-all">{i.url}</div>
                   <div className="text-xs text-zinc-500">
-                    Email: {(i as any).contactEmail || "—"}
+                    Email:{" "}
+                    {"contactEmail" in i
+                      ? (i as { contactEmail?: string | null }).contactEmail ??
+                        "—"
+                      : "—"}
                     {i.linkedUserId ? " • linked" : ""}
                   </div>
                 </div>
@@ -220,7 +226,14 @@ export default function InfluencersPage() {
                   {!url ? (
                     <button
                       onClick={() =>
-                        generateLink(i.id, (i as any).contactEmail, i.handle)
+                        generateLink(
+                          i.id,
+                          "contactEmail" in i
+                            ? (i as { contactEmail?: string | null })
+                                .contactEmail ?? null
+                            : null,
+                          i.handle
+                        )
                       }
                       className="w-full rounded-md border px-3 py-2 md:w-auto"
                       disabled={createInvite.isPending}

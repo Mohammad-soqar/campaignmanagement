@@ -14,7 +14,6 @@ const campaignInput = z.object({
 });
 
 export const campaignRouter = router({
-  // === MANAGER CRUD ===
   create: protectedProcedure
     .use(requireManager)
     .input(campaignInput)
@@ -22,7 +21,7 @@ export const campaignRouter = router({
       const [row] = await ctx.db
         .insert(campaigns)
         .values({
-        userId: ctx.userId!,
+          userId: ctx.userId!,
           title: input.title,
           description: input.description ?? null,
           budget: input.budget.toString(),
@@ -69,8 +68,7 @@ export const campaignRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      // Managers: only their own campaigns
-      if (ctx.role === 'manager') {
+      if (ctx.role === "manager") {
         const [row] = await ctx.db
           .select()
           .from(campaigns)
@@ -78,8 +76,11 @@ export const campaignRouter = router({
         return row ?? null;
       }
 
-      // Influencers: campaigns they are assigned to.
-      // Prefer influencers.linkedUserId when present; otherwise fall back to ownerUserId (compat).
+      // condition: prefer linkedUserId if schema defines it, otherwise fallback
+      const condition = influencers.linkedUserId
+        ? eq(influencers.linkedUserId, ctx.userId!)
+        : eq(influencers.ownerUserId, ctx.userId!);
+
       const rows = await ctx.db
         .select({ campaign: campaigns })
         .from(campaignInfluencers)
@@ -88,16 +89,13 @@ export const campaignRouter = router({
         .where(
           and(
             eq(campaignInfluencers.campaignId, input.id),
-            or(
-              // if your schema has linkedUserId, this will match; otherwise it just won't filter anything on that col
-              eq((influencers as any).linkedUserId ?? influencers.ownerUserId, ctx.userId!),
-              eq(influencers.ownerUserId, ctx.userId!)
-            )
+            or(condition, eq(influencers.ownerUserId, ctx.userId!))
           )
         );
 
       return rows[0]?.campaign ?? null;
     }),
+
 
   update: protectedProcedure
     .use(requireManager)
@@ -134,25 +132,19 @@ export const campaignRouter = router({
       return row ?? null;
     }),
 
-  // === Influencer dashboard — campaigns assigned to me ===
-  listAssignedToMe: protectedProcedure
-    .query(async ({ ctx }) => {
-      if (ctx.role !== 'influencer') return []; // managers won't see anything here
+  listAssignedToMe: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.role !== "influencer") return [];
+    const condition = influencers.linkedUserId
+      ? eq(influencers.linkedUserId, ctx.userId!)
+      : eq(influencers.ownerUserId, ctx.userId!);
+    const rows = await ctx.db
+      .select({ campaign: campaigns })
+      .from(campaignInfluencers)
+      .leftJoin(campaigns, eq(campaignInfluencers.campaignId, campaigns.id))
+      .leftJoin(influencers, eq(campaignInfluencers.influencerId, influencers.id))
+      .where(or(condition, eq(influencers.ownerUserId, ctx.userId!)))
+      .orderBy(desc(campaigns.createdAt));
 
-      const rows = await ctx.db
-        .select({ campaign: campaigns })
-        .from(campaignInfluencers)
-        .leftJoin(campaigns, eq(campaignInfluencers.campaignId, campaigns.id))
-        .leftJoin(influencers, eq(campaignInfluencers.influencerId, influencers.id))
-        .where(
-          or(
-            // prefer linkedUserId if you add it to schema
-            eq((influencers as any).linkedUserId ?? influencers.ownerUserId, ctx.userId!),
-            eq(influencers.ownerUserId, ctx.userId!)
-          )
-        )
-        .orderBy(desc(campaigns.createdAt));
-
-      return rows.map(r => r.campaign).filter(Boolean);
-    }),
+    return rows.map((r) => r.campaign).filter(Boolean);
+  }),
 });

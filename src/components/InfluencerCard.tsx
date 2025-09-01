@@ -1,12 +1,13 @@
 // components/InfluencerCard.tsx
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
+import Image from "next/image";
 
 export type InfluencerCardData = {
   id: string;
   handle: string;
-  platform: 'instagram' | 'youtube' | 'tiktok' | 'x' | string;
+  platform: "instagram" | "youtube" | "tiktok" | "x" | string;
   followerCount?: number | null;
   engagementRate?: number | null;
   url?: string | null;
@@ -16,7 +17,7 @@ export type InfluencerCardData = {
 };
 
 export function fmtPct(n?: number | null) {
-  if (n == null || Number.isNaN(n)) return '—';
+  if (n == null || Number.isNaN(n)) return "—";
   return `${(n * 100).toFixed(1)}%`;
 }
 
@@ -50,26 +51,32 @@ export default function InfluencerCard({
         {/* Left: identity */}
         <div className="flex min-w-0 items-start gap-3">
           {avatarUrl ? (
-            <img
-              src={avatarUrl}
+            <Image
+              src={avatarUrl ?? "/default-avatar.png"} // fallback if null
               alt={`${handle} avatar`}
+              width={40}
+              height={40}
               className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
             />
           ) : (
-            <div className="h-10 w-10 flex-shrink-0 rounded-full bg-zinc-200" aria-hidden />
+            <div
+              className="h-10 w-10 flex-shrink-0 rounded-full bg-zinc-200"
+              aria-hidden
+            />
           )}
 
           <div className="min-w-0 space-y-0.5">
             <div className="font-medium truncate">{handle}</div>
             <div className="text-sm text-zinc-600">
-              {platform} • {followerCount ?? 0} followers • ER {fmtPct(engagementRate ?? 0)}
+              {platform} • {followerCount ?? 0} followers • ER{" "}
+              {fmtPct(engagementRate ?? 0)}
             </div>
             {url ? (
               <div className="text-xs text-zinc-500 break-all">{url}</div>
             ) : null}
             <div className="text-xs text-zinc-500">
-              Email: {contactEmail || '—'}
-              {linkedUserId ? ' • linked' : ''}
+              Email: {contactEmail || "—"}
+              {linkedUserId ? " • linked" : ""}
             </div>
           </div>
         </div>

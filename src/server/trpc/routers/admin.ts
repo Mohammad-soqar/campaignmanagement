@@ -23,7 +23,7 @@ export const adminRouter = router({
     .mutation(async ({ ctx, input }) => {
       const [inf] = await ctx.db.select().from(influencers).where(eq(influencers.id, input.influencerId));
       if (!inf) throw new TRPCError({ code: 'NOT_FOUND', message: 'Influencer not found' });
-      if (inf.ownerUserId !== ctx.userId) throw new TRPCError({ code: 'Access Denied', message: 'Not your influencer' });
+      if (inf.ownerUserId !== ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Not your influencer' });
 
 
       const token = randomBytes(24).toString('hex');
@@ -48,7 +48,7 @@ export const adminRouter = router({
       const rows = await ctx.db
         .select()
         .from(profiles)
-        .where(and(eq(profiles.role, 'influencer' as any), eq(profiles.status, 'pending' as any)));
+        .where(and(eq(profiles.role, 'influencer'), eq(profiles.status, 'pending')));
       return rows;
     }),
 
@@ -76,7 +76,7 @@ export const adminRouter = router({
     .mutation(async ({ ctx, input }) => {
       const [row] = await ctx.db.select().from(influencers).where(eq(influencers.id, input.influencerId));
       if (!row) throw new TRPCError({ code: 'NOT_FOUND', message: 'Roster row not found' });
-      if (row.ownerUserId !== ctx.userId) throw new TRPCError({ code: 'Access Denied', message: 'Not your influencer' });
+      if (row.ownerUserId !== ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Not your influencer' });
 
       await ctx.db.update(influencers).set({
         linkedUserId: input.userId,

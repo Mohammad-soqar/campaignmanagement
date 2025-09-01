@@ -16,8 +16,8 @@ function getBearer(req: Request) {
 export async function createContext(opts: { req: Request }) {
   const token = getBearer(opts.req);
   let userId: string | null = null;
-  let role: 'manager' | 'influencer' | null = null;
-  let status: 'pending' | 'approved' | 'rejected' | null = null;
+  let role: "manager" | "influencer" | null = null;
+  let status: "pending" | "approved" | "rejected" | null = null;
 
   if (token) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -29,13 +29,18 @@ export async function createContext(opts: { req: Request }) {
     if (userId) {
       const [p] = await db.select().from(profiles).where(eq(profiles.userId, userId));
       if (p) {
-        role = p.role as any;
-        status = p.status as any;
+        if (p.role === "manager" || p.role === "influencer") {
+          role = p.role;
+        }
+        if (p.status === "pending" || p.status === "approved" || p.status === "rejected") {
+          status = p.status;
+        }
       }
     }
   }
 
   return { req: opts.req, db, userId, role, status };
 }
+
 
 export type Context = inferAsyncReturnType<typeof createContext>;
