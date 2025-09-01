@@ -1,114 +1,101 @@
-import { z } from 'zod';
-import { and, desc, eq } from 'drizzle-orm';
-import { router, protectedProcedure } from '../init';
-import { influencers } from '@/server/db/schema/influencers';
+import { z } from "zod";
+import { router, protectedProcedure, requireManager } from "../init";
+import { influencers } from "@/server/db/schema/influencers";
+import { eq, and, desc } from "drizzle-orm";
 
-const baseFields = z.object({
-    platform: z.enum(['youtube', 'instagram', 'tiktok', 'x']),
-    handle: z.string().min(1),
-    url: z.string().url(),
-    externalId: z.string().optional(),
-    followerCount: z.number().int().min(0).default(0),
-    engagementRate: z.number().min(0).max(1).optional(),
-    avatarUrl: z.string().url().optional(),
+const influencerInput = z.object({
+  platform: z.enum(["youtube", "instagram", "tiktok", "x"]),
+  handle: z.string().min(1),
+  url: z.string().url(),
+  followerCount: z.number().min(0).default(0),
+  engagementRate: z.number().min(0).max(1).optional(),
+  avatarUrl: z.string().url().optional(),
+  contactEmail: z.string().email().optional(),
 });
 
 export const influencerRouter = router({
-    create: protectedProcedure
-        .input(baseFields)
-        .mutation(async ({ ctx, input }) => {
-            const [row] = await ctx.db
-                .insert(influencers)
-                .values({
-                    ownerUserId: ctx.userId,
-                    platform: input.platform,
-                    handle: input.handle,
-                    url: input.url,
-                    externalId: input.externalId ?? null,
-                    followerCount: input.followerCount,
-                    engagementRate: input.engagementRate?.toString() ?? null,
-                    avatarUrl: input.avatarUrl ?? null,
-                })
-                .returning();
-            return row;
-        }),
+  create: protectedProcedure
+    .use(requireManager)
+    .input(influencerInput)
+    .mutation(async ({ ctx, input }) => {
+      const [row] = await ctx.db
+        .insert(influencers)
+        .values({
+          ownerUserId: ctx.userId!,
+          platform: input.platform,
+          handle: input.handle,
+          url: input.url,
+          followerCount: input.followerCount ?? 0,
+          engagementRate: input.engagementRate ?? null,
+          avatarUrl: input.avatarUrl ?? null,
+          ...({ contactEmail: (input as any).contactEmail ?? null } as any),
+        })
+        .returning();
 
-    list: protectedProcedure
-        .input(z.object({ platform: z.enum(['youtube', 'instagram', 'tiktok', 'x']).optional(), limit: z.number().min(1).max(100).default(20), offset: z.number().min(0).default(0) }).optional())
-        .query(async ({ ctx, input }) => {
-            const conditions = [eq(influencers.ownerUserId, ctx.userId)];
-            if (input?.platform) conditions.push(eq(influencers.platform, input.platform));
-            const rows = await ctx.db
-                .select()
-                .from(influencers)
-                .where(and(...conditions))
-                .orderBy(desc(influencers.createdAt))
-                .limit(input?.limit ?? 20)
-                .offset(input?.offset ?? 0);
-            return rows;
-        }),
+      return row;
+    }),
 
-    getById: protectedProcedure
-        .input(z.object({ id: z.string().uuid() }))
-        .query(async ({ ctx, input }) => {
-            const [row] = await ctx.db
-                .select()
-                .from(influencers)
-                .where(and(eq(influencers.id, input.id), eq(influencers.ownerUserId, ctx.userId)));
-            return row ?? null;
-        }),
+  listMine: protectedProcedure
+    .use(requireManager)
+    .query(async ({ ctx }) => {
+      return ctx.db
+        .select()
+        .from(influencers)
+        .where(eq(influencers.ownerUserId, ctx.userId!))
+        .orderBy(desc(influencers.createdAt));
+    }),
 
-    update: protectedProcedure
-        .input(baseFields.extend({ id: z.string().uuid() }))
-        .mutation(async ({ ctx, input }) => {
-            const { id, ...rest } = input;
-            const [row] = await ctx.db
-                .update(influencers)
-                .set({
-                    platform: rest.platform,
-                    handle: rest.handle,
-                    url: rest.url,
-                    externalId: rest.externalId ?? null,
-                    followerCount: rest.followerCount,
-                    engagementRate: rest.engagementRate?.toString() ?? null,
-                    avatarUrl: rest.avatarUrl ?? null,
-                })
-                .where(and(eq(influencers.id, id), eq(influencers.ownerUserId, ctx.userId)))
-                .returning();
-            return row ?? null;
-        }),
+  listAll: protectedProcedure
+    .use(requireManager)
+    .query(async ({ ctx }) => {
+      return ctx.db
+        .select()
+        .from(influencers)
+        .orderBy(desc(influencers.createdAt));
+    }),
 
-    delete: protectedProcedure
-        .input(z.object({ id: z.string().uuid() }))
-        .mutation(async ({ ctx, input }) => {
-            const [row] = await ctx.db
-                .delete(influencers)
-                .where(and(eq(influencers.id, input.id), eq(influencers.ownerUserId, ctx.userId)))
-                .returning();
-            return row ?? null;
-        }),
+  getById: protectedProcedure
+    .use(requireManager)
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const [row] = await ctx.db
+        .select()
+        .from(influencers)
+        .where(and(eq(influencers.id, input.id), eq(influencers.ownerUserId, ctx.userId!)));
+      return row ?? null;
+    }),
 
-    addFromUrl: protectedProcedure
-        .input(z.object({ url: z.string().url() }))
-        .mutation(async ({ ctx, input }) => {
-            const [row] = await ctx.db.insert(influencers).values({
-                ownerUserId: ctx.userId,
-                platform: 'youtube',
-                handle: input.url,
-                url: input.url,
-            }).returning();
-            return row;
-        }),
+  update: protectedProcedure
+    .use(requireManager)
+    .input(influencerInput.extend({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...rest } = input;
 
-    refresh: protectedProcedure
-        .input(z.object({ id: z.string().uuid() }))
-        .mutation(async () => {
-            return { ok: true };
-        }),
+      const [row] = await ctx.db
+        .update(influencers)
+        .set({
+          platform: rest.platform,
+          handle: rest.handle,
+          url: rest.url,
+          followerCount: rest.followerCount ?? 0,
+          engagementRate: rest.engagementRate ?? null,
+          avatarUrl: rest.avatarUrl ?? null,
+          ...({ contactEmail: (rest as any).contactEmail ?? null } as any),
+        })
+        .where(and(eq(influencers.id, id), eq(influencers.ownerUserId, ctx.userId!)))
+        .returning();
 
-    importCsv: protectedProcedure
-        .input(z.object({ fileId: z.string() }))
-        .mutation(async () => {
-            return { status: 'queued' as const };
-        }),
+      return row ?? null;
+    }),
+
+  delete: protectedProcedure
+    .use(requireManager)
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [row] = await ctx.db
+        .delete(influencers)
+        .where(and(eq(influencers.id, input.id), eq(influencers.ownerUserId, ctx.userId!)))
+        .returning();
+      return row ?? null;
+    }),
 });
