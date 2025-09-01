@@ -13,12 +13,12 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 });
 
 export const requireManager = t.middleware(({ ctx, next }) => {
-  if (ctx.role !== 'manager') throw new TRPCError({ code: 'Access Denied', message: 'Manager role required' });
+  if (ctx.role !== 'manager') throw new TRPCError({ code: 'FORBIDDEN', message: 'Manager role required' });
   return next();
 });
 
 export const requireApprovedInfluencer = t.middleware(({ ctx, next }) => {
-  if (ctx.role !== 'influencer') throw new TRPCError({ code: 'Access Denied', message: 'Influencer role required' });
-  if (ctx.status !== 'approved') throw new TRPCError({ code: 'Access Denied', message: 'Influencer not approved yet' });
+  if (ctx.role !== 'influencer') throw new TRPCError({ code: 'FORBIDDEN', message: 'Influencer role required' });
+  if (ctx.status !== 'approved') throw new TRPCError({ code: 'FORBIDDEN', message: 'Influencer not approved yet' });
   return next();
 });
