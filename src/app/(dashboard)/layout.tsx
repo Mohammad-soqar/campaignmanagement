@@ -1,5 +1,5 @@
-import TRPCProvider from './trpc-provider';
+import LayoutShell from '@/components/LayoutShell';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return <TRPCProvider>{children}</TRPCProvider>;
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return <LayoutShell>{children}</LayoutShell>;
 }
