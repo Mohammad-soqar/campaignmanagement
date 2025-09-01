@@ -1,6 +1,6 @@
 import { createTRPCReact } from '@trpc/react-query';
 import type { AppRouter } from '@/server/trpc/routers/_app';
-import { httpBatchLink } from '@trpc/client';
+import { httpBatchLink, loggerLink } from '@trpc/client';
 import superjson from 'superjson';
 
 export const api = createTRPCReact<AppRouter>();
@@ -8,6 +8,7 @@ export const api = createTRPCReact<AppRouter>();
 export function trpcClient(getAccessToken: () => Promise<string | null>) {
   return api.createClient({
     links: [
+      loggerLink(),
       httpBatchLink({
         url: '/api/trpc',
         transformer: superjson,
